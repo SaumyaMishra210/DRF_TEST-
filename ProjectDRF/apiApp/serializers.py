@@ -2,9 +2,6 @@ from rest_framework import serializers
 from .models import  *
 from django.contrib.auth.models import User
 
-
- 
-    
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -25,7 +22,7 @@ class BookSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username','email','password']
+        fields = ['id','username','email','password']
 
     def create(self, validated_data):
         # Extract password and create user with password hashing

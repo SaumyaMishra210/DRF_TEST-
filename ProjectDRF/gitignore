@@ -1,0 +1,6 @@
+env/
+venv/
+.idea
+.venv
+main.py
+.pdf

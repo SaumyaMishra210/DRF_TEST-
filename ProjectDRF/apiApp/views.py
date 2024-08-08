@@ -5,14 +5,31 @@ from rest_framework import status
 from .models import *
 from .serializers import *
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated , IsAdminUser
 from django.contrib.auth.models import User 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import generics
 from datetime import datetime 
 from . import helpers
-# Create your views here.   
+from rest_framework.decorators import api_view , permission_classes
+from rest_framework import viewsets
+# Create your views here.    
+
+# View set
+class BookViewSet(viewsets.ModelViewSet):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+
+
+# function based view
+@api_view()
+@permission_classes([IsAuthenticated])
+def getBook(request):
+    items = Book.objects.filter(id= 1)
+    serializer = BookSerializer(items, many=True)
+    return Response({'status': "message from rest framework.", 'payload ': serializer.data})
+
 
 class GeneratePdf(APIView):
     def get(self,request):
@@ -25,10 +42,13 @@ class GeneratePdf(APIView):
         
         return Response({"status":200,"path":f"media/{file_name}.pdf"})
 
+
+# generic view
+
 # ListAPIView : lists all the values from the DB.[GET]
 # CreateAPIView : Create new object through an API.[POST]
 # together perform Get and Post request inside single view.
-
+@permission_classes([IsAdminUser])
 class UserGeneric(generics.ListAPIView,generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer 
@@ -42,6 +62,7 @@ class BookGeneric(generics.ListAPIView, generics.CreateAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer 
 
+# class based views
 class UserView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -61,11 +82,12 @@ class UserView(APIView):
             access_token = token_obj.access_token
 
             response_data = {
-                "token":str(token_obj),
                 "status":status.HTTP_201_CREATED,
                 'data': serializer.data,
+                'refresh': str(token_obj),
+                'access': str(token_obj.access_token)
                 }
-            return Response({"data":response_data,'refresh': str(token_obj),'access': str(token_obj.access_token)})
+            return Response({"data":response_data,})
         return Response({"status":status.HTTP_400_BAD_REQUEST,"Error":serializer.errors})
     
 
@@ -73,7 +95,7 @@ class BookView(APIView):
     def get(self, request):
         items = Book.objects.all()
         serializer = BookSerializer(items, many=True)
-        return Response({'status': "message from rest framework.", 'payload ': serializer.data})
+        return Response({'status': "Data from Book Model.", 'payload ': serializer.data})
 
     def post(self, request):
         serializer = BookSerializer(data=request.data)
